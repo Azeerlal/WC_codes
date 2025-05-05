@@ -1,0 +1,42 @@
+clc; clear; close all;
+% Parameters
+8
+SNR_dB = 0:2:20; numSymbols = 1e5;
+% BPSK Modulation
+M = 2;
+dataBits = randi([0 M-1], numSymbols, 1);
+modSymbols = pskmod(dataBits, M, pi);
+BER_BPSK = zeros(1, length(SNR_dB));
+for snrIdx = 1:length(SNR_dB)
+rxSymbols = awgn(modSymbols, SNR_dB(snrIdx), 'measured');
+rxBits = pskdemod(rxSymbols, M, pi);
+BER_BPSK(snrIdx) = sum(dataBits ~= rxBits) / numSymbols;
+end
+% QPSK Modulation
+M = 4;
+dataBits = randi([0 M-1], numSymbols, 1);
+modSymbols = pskmod(dataBits, M, pi/4);
+BER_QPSK = zeros(1, length(SNR_dB));
+for snrIdx = 1:length(SNR_dB)
+rxSymbols = awgn(modSymbols, SNR_dB(snrIdx), 'measured');
+rxBits = pskdemod(rxSymbols, M, pi/4);
+BER_QPSK(snrIdx) = sum(dataBits ~= rxBits) / numSymbols;
+end
+% 16-QAM Modulation
+M = 16;
+dataBits = randi([0 M-1], numSymbols, 1);
+modSymbols = qammod(dataBits, M, 'UnitAveragePower', true);
+BER_QAM = zeros(1, length(SNR_dB));
+for snrIdx = 1:length(SNR_dB)
+rxSymbols = awgn(modSymbols, SNR_dB(snrIdx), 'measured');
+rxBits = qamdemod(rxSymbols, M, 'UnitAveragePower', true);
+BER_QAM(snrIdx) = sum(dataBits ~= rxBits) / numSymbols;
+end
+% Plot BER vs. SNR
+figure;
+semilogy(SNR_dB, BER_BPSK, 'ro-', SNR_dB, BER_QPSK, 'bs-', SNR_dB,
+BER_QAM, 'g^-', 'LineWidth', 2);
+grid on;
+xlabel('SNR (dB)'); ylabel('Bit Error Rate (BER)');
+legend('BPSK', 'QPSK', '16-QAM');
+title('BER Performance of Digital Modulation Techniques');
